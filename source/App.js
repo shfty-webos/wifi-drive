@@ -12,6 +12,12 @@ enyo.kind({
 		easingFunction: enyo.easing.quadInOut,
 		duration:500},
 		
+		{name: "appMenu",
+		kind: "enyo.Menu",
+		components:[
+			{content: "Hello"},
+		]},
+		
 		{tag: "div",
 		classes: "enyo-fill",
 		components:[
@@ -128,6 +134,7 @@ enyo.kind({
 	openMapSlideable: function() { this.$.mapSlideable.animateToMin(); },
 	closeMapSlideable: function() { this.$.mapSlideable.animateToMax(); },
 	
+	//WiFi Image
 	fadeOut: function() {
 		enyo.log("Fading Image...");
 		this.$.animEngine.startValue = 1.0;
@@ -141,6 +148,12 @@ enyo.kind({
 		this.$.animEngine.play();
 	},
 	
+	//App Menu
+	showAppMenu: function() {
+		this.$.appMenu.show();
+	},
+	
+	//Animator
 	stepAnimation: function(inSender) {
 		enyo.log("Stepping Animation. Value: " + inSender.value);
 		this.$.phoneImage.applyStyle("opacity", inSender.value);
