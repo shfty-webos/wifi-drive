@@ -3,7 +3,10 @@ enyo.kind({
 	fit: true,
 	classes: "onyx",
 	components:[
-		{kind: "enyo.Signals", onload: "handleLoad"},
+		{kind: "enyo.Signals",
+		onload: "handleLoad",
+		onbeforeunload: "handleUnload",
+		onkeydown: "handleKeyDown"},
 			
 		{name: "animEngine",
 		kind: "enyo.Animator",
@@ -57,6 +60,11 @@ enyo.kind({
 		style: "position:absolute; top:0; left:0; width:100%; height:100%; background:#EAEAEA;",
 		components:[
 			{kind: "onyx.Toolbar",
+			style: "position:absolute; top:0; height:32px; width:100%;",
+			components:[
+				{content: "Preferences"}
+			]},
+			{kind: "onyx.Toolbar",
 			style: "position:absolute; bottom:0; height:32px; width:100%;",
 			components:[
 				{kind: "onyx.Grabber",
@@ -77,6 +85,7 @@ enyo.kind({
 			{kind: "onyx.Toolbar",
 			style: "height:32px;",
 			components:[
+				{content: "Map Drive"},
 				{id: "grabber",
 				kind: "onyx.Grabber",
 				style: "position:absolute; right:10px;",
@@ -92,7 +101,7 @@ enyo.kind({
 		components:[
 			{kind: "enyo.Image", src: "assets/iconSmall.png"},
 			{tag: "iframe", style: "border:none; display:block; height:120px;",
-			src: "source/aboutBox.html"},
+			src: "source/content/aboutBox.html"},
 			{kind: "onyx.Button", content: "Close", ontap: "hideAbout"}
 		]},
 		
@@ -105,14 +114,13 @@ enyo.kind({
 			{kind: "enyo.Image", src: "assets/iconSmall.png"},
 			{tag: "iframe",
 			style: "border:none; display:block; width:320px; height:240px;",
-			src: "source/firstUseBox.html"},
+			src: "source/content/firstUseBox.html"},
 			{kind: "onyx.Button", content: "Close", ontap: "hideFirstUse"}
 		]}
 	],
 	
+	//Signals
 	handleLoad: function() {
-		enyo.log("handleLoad Called");
-		enyo.log("Window bounds: X:" + window.innerWidth + " Y:" + window.innerHeight);
 		//Setup the right image based on screen size
 		if (window.innerWidth >= 768 && window.innerHeight >= 768) {
 			this.$.tabletImage.addStyles("display:block;");
@@ -120,17 +128,41 @@ enyo.kind({
 		else {
 			this.$.phoneImage.addStyles("display:block;");
 		}
+		
+		if(enyo.webOS) {
+			//Stop Screen Timeout
+			enyo.webOS.setWindowProperties({ blockScreenTimeout: true });
+		}
 	},
 	
+	handleUnload: function() {
+		//Deactivate Samba
+		//Save Preferences
+	},
+	
+	handleKeyDown: function(inSender, inEvent) {
+		//Keycode 27 (ESC) - Back Gesture		
+		if(inEvent.which == 27) {
+			hideAbout();
+			hideFirstUse();
+			closePrefSlideable();
+			return true;
+		}
+	},
+	
+	//About
 	showAbout: function() { this.$.aboutPopup.show(); },
 	hideAbout: function() { this.$.aboutPopup.hide(); },
 	
+	//First Use
 	showFirstUse: function() { this.$.firstUsePopup.show(); },
 	hideFirstUse: function() { this.$.firstUsePopup.hide(); },
 	
+	//Preferences
 	openPrefSlideable: function() { this.$.prefSlideable.animateToMin(); },
 	closePrefSlideable: function() { this.$.prefSlideable.animateToMax(); },
 	
+	//Map Drive
 	openMapSlideable: function() { this.$.mapSlideable.animateToMin(); },
 	closeMapSlideable: function() { this.$.mapSlideable.animateToMax(); },
 	
@@ -146,11 +178,6 @@ enyo.kind({
 		this.$.animEngine.startValue = 0.5;
 		this.$.animEngine.endValue = 1.0;
 		this.$.animEngine.play();
-	},
-	
-	//App Menu
-	showAppMenu: function() {
-		this.$.appMenu.show();
 	},
 	
 	//Animator
