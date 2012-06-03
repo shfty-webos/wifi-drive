@@ -1,4 +1,6 @@
 enyo.depends(
 	"App.css",
-	"App.js"
+	"App.js",
+	"../lib/onyx/",
+	"../lib/layout/"
 );
