@@ -2,6 +2,8 @@ enyo.depends(
 	"App.css",
 	"App.js",
 	"$lib/onyx/",
+	"$lib/onyx/source/Drawer.js",
 	"$lib/layout/",
-	"$lib/webos-ext/"
+	"$lib/webos-ext/",
+	"$lib/storage/"
 );

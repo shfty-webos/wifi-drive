@@ -6,7 +6,7 @@ enyo.kind({
 		{kind: "enyo.Signals",
 		onload: "handleLoad",
 		onbeforeunload: "handleUnload",
-		onkeydown: "handleKeyDown"},
+		onkeyup: "handleKeyUp"},
 			
 		{name: "animEngine",
 		kind: "enyo.Animator",
@@ -14,6 +14,8 @@ enyo.kind({
 		onEnd: "endAnimation",
 		easingFunction: enyo.easing.quadInOut,
 		duration:500},
+		
+		{kind: "Storage"},
 		
 		{name: "appMenu",
 		kind: "enyo.Menu",
@@ -36,17 +38,17 @@ enyo.kind({
 			
 			{name: "bottomBar",
 			kind: "onyx.Toolbar",
-			layoutKind:"FittableColumnsLayout",
 			style: "position:absolute; bottom:0; left:0; right:0; height:32px;",
 			components:[
 				{kind: "onyx.Button",
-				content: "Map Drive",
-				fit:true,
-				ontap: "openMapSlideable"},
+				content: "Preferences",
+				style: "float:right;",
+				ontap: "openPrefSlideable"},
 				
 				{kind: "onyx.Button",
-				content: "Preferences",
-				ontap: "openPrefSlideable"},
+				content: "Map Drive",
+				style: "float:right;",
+				ontap: "openMapSlideable"},
 			]}
 		]},
 	
@@ -57,6 +59,7 @@ enyo.kind({
 		min: 0,
 		max: 100,
 		value: 100,
+		overMoving: false,
 		style: "position:absolute; top:0; left:0; width:100%; height:100%; background:#EAEAEA;",
 		components:[
 			{kind: "onyx.Toolbar",
@@ -64,6 +67,7 @@ enyo.kind({
 			components:[
 				{content: "Preferences"}
 			]},
+			{kind: "PrefsContent", style: "position:absolute; top:52px; bottom:52px; width:100%"},
 			{kind: "onyx.Toolbar",
 			style: "position:absolute; bottom:0; height:32px; width:100%;",
 			components:[
@@ -80,17 +84,22 @@ enyo.kind({
 		min: 0,
 		max: 100,
 		value: 100,
+		overMoving: false,
 		style: "position:absolute; top:0; left:0; width:100%; height:100%; background:#EAEAEA;",
 		components:[
 			{kind: "onyx.Toolbar",
 			style: "height:32px;",
 			components:[
 				{content: "Map Drive"},
+				{kind: "onyx.Button", 
+				content: "Refresh",
+				style: "position:absolute; right:64px;"},
 				{id: "grabber",
 				kind: "onyx.Grabber",
 				style: "position:absolute; right:10px;",
 				ontap: "closeMapSlideable"}
 			]},
+			{tag: "div", style: "position:absolute; top:52px; bottom:0; width:100%"},
 		]},
 		
 		{name: "aboutPopup",
@@ -140,7 +149,7 @@ enyo.kind({
 		//Save Preferences
 	},
 	
-	handleKeyDown: function(inSender, inEvent) {
+	handleKeyUp: function(inSender, inEvent) {
 		//Keycode 27 (ESC) - Back Gesture		
 		if(inEvent.which == 27) {
 			hideAbout();
@@ -190,4 +199,56 @@ enyo.kind({
 		enyo.log("Stopping Animation");
 		this.$.phoneImage.applyStyle("opacity", inSender.endValue);
 	},
+});
+
+//Preferences Content
+enyo.kind({
+	name: "PrefsContent",
+	components:[
+		{kind: "onyx.Groupbox", style: "padding-left:8px; padding-right:8px; padding-top:8px", components:[
+			{kind: "onyx.GroupboxHeader", content: "Device Name"},
+			{kind: "onyx.InputDecorator", components:[
+				{kind: "onyx.Input", placeholder: "Name"}
+			]}
+		]},
+		{kind: "onyx.Groupbox", style: "padding-left:8px; padding-right:8px; padding-top:8px", components:[
+			{kind: "onyx.GroupboxHeader", content: "Device Description"},
+			{kind: "onyx.InputDecorator", components:[
+				{kind: "onyx.Input", placeholder: "Description"}
+			]}
+		]},
+		{kind: "onyx.Groupbox", style: "padding-left:8px; padding-right:8px; padding-top:8px", components:[
+			{kind: "onyx.GroupboxHeader", content: "Workgroup"},
+			{kind: "onyx.InputDecorator", components:[
+				{kind: "onyx.Input", placeholder: "Workgroup"}
+			]}
+		]},
+		{kind: "onyx.Groupbox", style: "padding-left:8px; padding-right:8px; padding-top:8px", components:[
+		{kind: "onyx.GroupboxHeader", content: "Sharing"},
+			{kind: "PrefsFolder", title: "Public"},
+			{kind: "PrefsFolder", title: "Internal"},
+			{kind: "PrefsFolder", title: "Root"},
+		]}
+	]
+});
+
+//Preferences Folder- Public, Internal, Root etc.
+enyo.kind({
+	name: "PrefsFolder",
+	kind: "Control",
+	published:{
+		title: "Folder"
+	},
+	components:[
+		{name: "Title", style: "padding-left:8px; padding-right:8px; padding-top:8px;"},
+		{kind: "onyx.Drawer", open:false, style: "padding-left:8px; padding-right:8px; padding-bottom:8px;", components:[
+			{content: "Available", style: "padding-top:8px;"},
+			{content: "Writeable", style: "padding-top:8px;"},
+			{content: "Browseable", style: "padding-top:8px;"},
+		]},
+	],
+	create: function() {
+		this.inherited(arguments);
+		this.$.Title.setContent(this.title);
+	}
 });
