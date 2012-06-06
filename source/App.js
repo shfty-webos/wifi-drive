@@ -97,10 +97,9 @@ enyo.kind({
 				style: "position:absolute; right:10px;",
 				ontap: "closeMapSlideable"}
 			]},
-			{name: "mapDiv",
-			tag: "div",
-			style: "position:absolute; top:52px; bottom:0; width:100%; padding:8px;",
-			content: "Hello"},
+			{kind: "enyo.Scroller", style: "position:absolute; top:53px; bottom:0; left:0; right:0;", components:[
+				{kind: "MapContent"},
+			]},
 		]},
 		
 		{name: "aboutPopup",
@@ -315,5 +314,26 @@ enyo.kind({
 	create: function() {
 		this.inherited(arguments);
 		this.$.Title.setContent(this.title);
+	},
+});
+
+//Map Drive Content
+enyo.kind({
+	name: "MapContent",
+	classes: "enyo-fill",
+	components:[
+		{kind: "FlyweightRepeater", classes: "enyo-fill", rows: 2, onSetupRow: "setupItem", components:[
+			{name: "item", style: "padding:8px;", components:[
+				{name: "title", style: "display:inline;", content: "Row Item"},
+				{name: "spinner", kind: "enyo.Image", style: "display:inline; float:right; padding:4px;", src: "assets/spinner.gif"}
+			]},
+		]}
+	],
+	setupItem: function(inSender, inEvent) {
+		if(inEvent.index == 0) {
+			this.$.title.setContent("Scanning for Drives...");
+			this.$.spinner.applyStyle('display', 'block');
+		}
+		this.$.item.applyStyle("background-color", inSender.isSelected(inEvent.index) ? "lightblue" : null);
 	},
 });
