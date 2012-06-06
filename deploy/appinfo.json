@@ -1,0 +1,12 @@
+{
+  "id": "com.shiftyaxel.wifidrive",
+  "version": "1.6.0",
+  "vendor": "ShiftyAxel",
+  "type": "web",
+  "main": "index.html",
+  "title": "Wi-Fi Drive",
+  "uiRevision": "2",
+  "icon": "assets/iconSmall.png",
+  "splashicon": "assets/iconSmall.png",
+  "dockMode": true,
+}
