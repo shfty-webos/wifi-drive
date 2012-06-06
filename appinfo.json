@@ -7,6 +7,6 @@
   "title": "Wi-Fi Drive",
   "uiRevision": "2",
   "icon": "assets/iconSmall.png",
-  "splashicon": "assets/iconSmall.png",
+  "splashicon": "assets/phone.png",
   "dockMode": true,
 }
