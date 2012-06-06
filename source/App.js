@@ -3,6 +3,7 @@ enyo.kind({
 	fit: true,
 	classes: "onyx",
 	components:[
+		//System
 		{kind: "enyo.Signals",
 		onload: "handleLoad",
 		onbeforeunload: "handleUnload",
@@ -17,12 +18,7 @@ enyo.kind({
 		
 		{kind: "Storage"},
 		
-		{name: "appMenu",
-		kind: "enyo.Menu",
-		components:[
-			{content: "Hello"},
-		]},
-		
+		//Layout
 		{tag: "div",
 		classes: "enyo-fill",
 		components:[
@@ -67,7 +63,9 @@ enyo.kind({
 			components:[
 				{content: "Preferences"}
 			]},
-			{kind: "PrefsContent", style: "position:absolute; top:52px; bottom:52px; width:100%"},
+			{kind: "enyo.Scroller", style: "position:absolute; top:52px; bottom:52px; width:100%", components:[
+				{kind: "PrefsContent"},
+			]},
 			{kind: "onyx.Toolbar",
 			style: "position:absolute; bottom:0; height:32px; width:100%;",
 			components:[
@@ -99,7 +97,10 @@ enyo.kind({
 				style: "position:absolute; right:10px;",
 				ontap: "closeMapSlideable"}
 			]},
-			{tag: "div", style: "position:absolute; top:52px; bottom:0; width:100%"},
+			{name: "mapDiv",
+			tag: "div",
+			style: "position:absolute; top:52px; bottom:0; width:100%; padding:8px;",
+			content: "Hello"},
 		]},
 		
 		{name: "aboutPopup",
@@ -138,7 +139,11 @@ enyo.kind({
 			this.$.phoneImage.addStyles("display:block;");
 		}
 		
-		if(enyo.webOS) {
+		//Setup animation engine
+		window.animEngine = this.$.animEngine;
+		
+		//If being run inside webOS
+		if(enyo.webOS.setWindowProperties) {
 			//Stop Screen Timeout
 			enyo.webOS.setWindowProperties({ blockScreenTimeout: true });
 		}
@@ -175,29 +180,45 @@ enyo.kind({
 	openMapSlideable: function() { this.$.mapSlideable.animateToMin(); },
 	closeMapSlideable: function() { this.$.mapSlideable.animateToMax(); },
 	
-	//WiFi Image
+	//Wi-Fi Image
 	fadeOut: function() {
 		enyo.log("Fading Image...");
 		this.$.animEngine.startValue = 1.0;
 		this.$.animEngine.endValue = 0.5;
+		this.$.animEngine.target = this.$.phoneImage;
+		this.$.animEngine.animStyle = "opacity";
 		this.$.animEngine.play();
 	},
 	
 	fadeIn: function() {
 		this.$.animEngine.startValue = 0.5;
 		this.$.animEngine.endValue = 1.0;
+		this.$.animEngine.target = this.$.phoneImage;
+		this.$.animEngine.animStyle = "opacity";
 		this.$.animEngine.play();
 	},
 	
 	//Animator
 	stepAnimation: function(inSender) {
-		enyo.log("Stepping Animation. Value: " + inSender.value);
-		this.$.phoneImage.applyStyle("opacity", inSender.value);
+		var rotation;
+		if(inSender.animStyle == "-webkit-transform") {
+			rotation = "rotate(" + inSender.value + "deg)";
+			inSender.target.applyStyle(inSender.animStyle, rotation);
+		}
+		else {
+			inSender.target.applyStyle(inSender.animStyle, inSender.value);
+		}
 	},
 	
 	endAnimation: function(inSender) {
-		enyo.log("Stopping Animation");
-		this.$.phoneImage.applyStyle("opacity", inSender.endValue);
+		var rotation;
+		if(inSender.animStyle == "-webkit-transform") {
+			rotation = "rotate(" + inSender.endValue + "deg)";
+			inSender.target.applyStyle(inSender.animStyle, rotation);
+		}
+		else {
+			inSender.target.applyStyle(inSender.animStyle, inSender.endValue);
+		}
 	},
 });
 
@@ -223,32 +244,76 @@ enyo.kind({
 				{kind: "onyx.Input", placeholder: "Workgroup"}
 			]}
 		]},
-		{kind: "onyx.Groupbox", style: "padding-left:8px; padding-right:8px; padding-top:8px", components:[
+		{kind: "onyx.Groupbox", style: "padding:8px", components:[
 		{kind: "onyx.GroupboxHeader", content: "Sharing"},
-			{kind: "PrefsFolder", title: "Public"},
-			{kind: "PrefsFolder", title: "Internal"},
-			{kind: "PrefsFolder", title: "Root"},
+			{kind: "PrefsDrawer", title: "Public"},
+			{kind: "PrefsDrawer", title: "Internal"},
+			{kind: "PrefsDrawer", title: "Root"},
 		]}
 	]
 });
 
-//Preferences Folder- Public, Internal, Root etc.
+//Preferences Drawer- Public, Internal, Root etc.
 enyo.kind({
-	name: "PrefsFolder",
+	name: "PrefsDrawer",
 	kind: "Control",
 	published:{
-		title: "Folder"
+		title: "Drawer"
 	},
+	style: "padding:4px;",
 	components:[
-		{name: "Title", style: "padding-left:8px; padding-right:8px; padding-top:8px;"},
-		{kind: "onyx.Drawer", open:false, style: "padding-left:8px; padding-right:8px; padding-bottom:8px;", components:[
-			{content: "Available", style: "padding-top:8px;"},
-			{content: "Writeable", style: "padding-top:8px;"},
-			{content: "Browseable", style: "padding-top:8px;"},
+		{kind: "enyo.Control", name: "Title", style: "float:left; padding:4px;", ontap: "toggleOpen"},
+		{kind: "onyx.IconButton", name: "Button", src: "assets/drawerButton.png", style: "float:right;", ontap: "toggleOpen"},
+		{kind: "onyx.Drawer", open:false, style: "width:100%;", components:[
+			{kind: "onyx.Groupbox", style: "padding-left:2px; padding-right:2px; padding-bottom:2px; padding-top:4px;", components:[
+				{kind: "propBox", title: "Available"},
+				{kind: "propBox", title: "Writeable"},
+				{kind: "propBox", title: "Browseable"},
+			]},
 		]},
 	],
+	
 	create: function() {
 		this.inherited(arguments);
 		this.$.Title.setContent(this.title);
-	}
+	},
+	
+	toggleOpen: function(inSender) {
+		
+		if(!this.$.drawer.getOpen()) {
+			this.$.drawer.setOpen(true);
+			window.animEngine.startValue = 0;
+			window.animEngine.endValue = 90;
+		}
+		else {
+			window.animEngine.startValue = 90;
+			window.animEngine.endValue = 0;
+			this.$.drawer.setOpen(false);
+		}
+		
+		window.animEngine.target = inSender.parent.$.Button;
+		window.animEngine.animStyle = "-webkit-transform";
+		window.animEngine.easingFunction = enyo.easing.expoOut;
+		window.animEngine.duration = 300;
+		
+		window.animEngine.play();
+	},
+});
+
+enyo.kind({
+	kind: "enyo.Control",
+	name: "propBox",
+	style: "height:32px; padding:6px;",
+	published:{
+		title: "Title",
+	},
+	components:[
+		{name: "Title", style: "float:left; padding:4px;"},
+		{kind: "onyx.Checkbox", style: "float:right"}
+	],
+	
+	create: function() {
+		this.inherited(arguments);
+		this.$.Title.setContent(this.title);
+	},
 });
