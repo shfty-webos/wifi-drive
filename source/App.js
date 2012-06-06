@@ -63,13 +63,14 @@ enyo.kind({
 			components:[
 				{content: "Preferences"}
 			]},
-			{kind: "enyo.Scroller", style: "position:absolute; top:52px; bottom:52px; width:100%", components:[
+			{kind: "enyo.Scroller", style: "position:absolute; top:52px; bottom:52px; width:100%;", components:[
 				{kind: "PrefsContent"},
 			]},
 			{kind: "onyx.Toolbar",
 			style: "position:absolute; bottom:0; height:32px; width:100%;",
 			components:[
-				{kind: "onyx.Grabber",
+				{kind: "enyo.Image",
+				src: "assets/grabbutton.png",
 				style: "position:absolute;",
 				ontap: "closePrefSlideable"}
 			]},
@@ -93,8 +94,9 @@ enyo.kind({
 				content: "Refresh",
 				style: "position:absolute; right:64px;"},
 				{id: "grabber",
-				kind: "onyx.Grabber",
-				style: "position:absolute; right:10px;",
+				kind: "enyo.Image",
+				src: "assets/grabbutton.png",
+				style: "position:absolute; top:8px; right:8px;",
 				ontap: "closeMapSlideable"}
 			]},
 			{kind: "enyo.Scroller", style: "position:absolute; top:53px; bottom:0; left:0; right:0;", components:[
@@ -106,28 +108,29 @@ enyo.kind({
 		kind: "onyx.Popup",
 		centered: true,
 		floating: true,
+		lazy:false,
 		style: "text-align:center;",
 		components:[
 			{kind: "enyo.Image", src: "assets/iconSmall.png"},
-			{tag: "iframe", style: "border:none; display:block; height:120px;",
-			src: "source/content/aboutBox.html"},
-			{kind: "onyx.Button", content: "Close", ontap: "hideAbout"}
+			{kind: "AboutContent"},
+			{kind: "onyx.Button", content: "Close", style: "margin-top:8px;", ontap: "hideAbout"}
 		]},
 		
 		{name: "firstUsePopup",
 		kind: "onyx.Popup",
 		centered: true,
 		floating:true,
-		style: "text-align:center;",
+		lazy:false,
+		style: "width:320px; height:385px; text-align:center;",
 		components:[
 			{kind: "enyo.Image", src: "assets/iconSmall.png"},
-			{tag: "iframe",
-			style: "border:none; display:block; width:320px; height:240px;",
-			src: "source/content/firstUseBox.html"},
-			{kind: "onyx.Button", content: "Close", ontap: "hideFirstUse"}
+			{kind: "Scroller", style: "width:318px; height:245px;", classes: "popup-frame", components:[
+				{kind: "FirstUseContent", style: "padding:8px;"},
+			]},
+			{kind: "onyx.Button", content: "Close", style: "margin-top:8px;", ontap: "hideFirstUse"}
 		]}
 	],
-	
+
 	//Signals
 	handleLoad: function() {
 		//Setup the right image based on screen size
@@ -146,6 +149,10 @@ enyo.kind({
 			//Stop Screen Timeout
 			enyo.webOS.setWindowProperties({ blockScreenTimeout: true });
 		}
+		
+		//Show First Use Popup?
+		var firstUse = true;
+		if(firstUse) this.showFirstUse();
 	},
 	
 	handleUnload: function() {
@@ -159,6 +166,9 @@ enyo.kind({
 			hideAbout();
 			hideFirstUse();
 			closePrefSlideable();
+			
+			inEvent.stopPropagation();
+			inEvent.preventDefault();
 			return true;
 		}
 	},
@@ -168,7 +178,7 @@ enyo.kind({
 	hideAbout: function() { this.$.aboutPopup.hide(); },
 	
 	//First Use
-	showFirstUse: function() { this.$.firstUsePopup.show(); },
+	showFirstUse: function() { this.$.firstUsePopup.show();},
 	hideFirstUse: function() { this.$.firstUsePopup.hide(); },
 	
 	//Preferences
@@ -225,30 +235,34 @@ enyo.kind({
 enyo.kind({
 	name: "PrefsContent",
 	components:[
-		{kind: "onyx.Groupbox", style: "padding-left:8px; padding-right:8px; padding-top:8px", components:[
+		{kind: "onyx.Groupbox", classes: "box-list", components:[
 			{kind: "onyx.GroupboxHeader", content: "Device Name"},
 			{kind: "onyx.InputDecorator", components:[
 				{kind: "onyx.Input", placeholder: "Name"}
 			]}
 		]},
-		{kind: "onyx.Groupbox", style: "padding-left:8px; padding-right:8px; padding-top:8px", components:[
+		{kind: "onyx.Groupbox", classes: "box-list", components:[
 			{kind: "onyx.GroupboxHeader", content: "Device Description"},
 			{kind: "onyx.InputDecorator", components:[
 				{kind: "onyx.Input", placeholder: "Description"}
 			]}
 		]},
-		{kind: "onyx.Groupbox", style: "padding-left:8px; padding-right:8px; padding-top:8px", components:[
+		{kind: "onyx.Groupbox", classes: "box-list", components:[
 			{kind: "onyx.GroupboxHeader", content: "Workgroup"},
 			{kind: "onyx.InputDecorator", components:[
 				{kind: "onyx.Input", placeholder: "Workgroup"}
 			]}
 		]},
-		{kind: "onyx.Groupbox", style: "padding:8px", components:[
+		{kind: "onyx.Groupbox", classes: "box-list", components:[
 		{kind: "onyx.GroupboxHeader", content: "Sharing"},
 			{kind: "PrefsDrawer", title: "Public"},
 			{kind: "PrefsDrawer", title: "Internal"},
 			{kind: "PrefsDrawer", title: "Root"},
-		]}
+		]},
+		{kind: "onyx.Groupbox", style: "padding:8px;", components:[
+			{kind: "onyx.GroupboxHeader", content: "Misc"},
+			{content: "About", style:"padding:8px"}
+		]},
 	]
 });
 
@@ -322,7 +336,7 @@ enyo.kind({
 	name: "MapContent",
 	classes: "enyo-fill",
 	components:[
-		{kind: "FlyweightRepeater", classes: "enyo-fill", rows: 2, onSetupRow: "setupItem", components:[
+		{kind: "FlyweightRepeater", classes: "enyo-fill", rows: 1, onSetupRow: "setupItem", components:[
 			{name: "item", style: "padding:8px;", components:[
 				{name: "title", style: "display:inline;", content: "Row Item"},
 				{name: "spinner", kind: "enyo.Image", style: "display:inline; float:right; padding:4px;", src: "assets/spinner.gif"}

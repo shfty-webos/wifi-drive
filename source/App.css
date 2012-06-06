@@ -12,3 +12,21 @@
 	-o-transform:rotate(90deg);
 	-ms-transform:rotate(90deg);
 }
+
+.popup-frame {
+	display:block;
+	width:320px;
+	height:240px;
+	border:1px solid grey;
+	
+	-webkit-border-radius:5px;
+	-moz-border-radius:5px;
+	-o-border-radius:5px;
+	-ms-border-radius:5px;
+}
+
+.box-list {
+	padding-left:8px;
+	padding-right:8px;
+	padding-top:8px;
+}

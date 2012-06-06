@@ -1,6 +1,8 @@
 enyo.depends(
 	"App.css",
 	"App.js",
+	"content/aboutBox.js",
+	"content/firstUseBox.js",
 	"$lib/onyx/",
 	"$lib/onyx/source/Drawer.js",
 	"$lib/layout/",
