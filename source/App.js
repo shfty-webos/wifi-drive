@@ -1,3 +1,11 @@
+//Share definition for Preferences
+function share(available, writeable, browseable) {
+	this.available = available;
+	this.writeable = writeable;
+	this.browseable = browseable;
+};
+
+//App
 enyo.kind({
 	name: "App",
 	fit: true,
@@ -15,8 +23,6 @@ enyo.kind({
 		onEnd: "endAnimation",
 		easingFunction: enyo.easing.quadInOut,
 		duration:500},
-		
-		{kind: "Storage"},
 		
 		//Layout
 		{tag: "div",
@@ -141,18 +147,50 @@ enyo.kind({
 			this.$.phoneImage.addStyles("display:block;");
 		}
 		
-		//Setup animation engine
-		window.animEngine = this.$.animEngine;
+		//Dummy deviceInfo
+		this.deviceInfo = { modelNameAscii: "Non-webOS Host" };
 		
-		//If being run inside webOS
+		/* If being run inside webOS...
+		 * Stop screen timeout
+		 * Set window orientation to free
+		 * Setup Device Info
+		 */
 		if(enyo.webOS.setWindowProperties) {
-			//Stop Screen Timeout
 			enyo.webOS.setWindowProperties({ blockScreenTimeout: true });
+			enyo.webOS.setWindowOrientation('free');
+			this.deviceInfo = enyo.webOS.deviceInfo();
 		}
 		
-		//Show First Use Popup?
-		var firstUse = true;
-		if(firstUse) this.showFirstUse();
+		//Setup Animation Engine
+		window.animEngine = this.$.animEngine;
+		
+		//DEBUG: Reset Preferences
+		//this.resetPrefs();
+		
+		//Setup Preferences
+		if(!this.loadPrefs()) {
+			enyo.log("No Preferences Found. Initialising...");
+			window.prefs = {
+				name: this.deviceInfo.modelNameAscii,
+				description: this.deviceInfo.modelNameAscii + " Network Share",
+				workgroup: "WORKGROUP",
+				publicShare: new share(true, true, true),
+				internalShare: new share(false, true, false),
+				rootShare: new share(false, false, false),
+			};
+			
+			//Setup UI Elements
+			
+			//Show First Use
+			this.showFirstUse();
+			this.savePrefs();
+		}
+		else {
+			enyo.log("Preferences Found. Loading...");
+			//Setup UI Elements
+		}
+		
+		enyo.log(window.prefs);
 	},
 	
 	handleUnload: function() {
@@ -171,6 +209,19 @@ enyo.kind({
 			inEvent.preventDefault();
 			return true;
 		}
+	},
+	
+	//Preferences
+	savePrefs: function() {
+		return localStorage.setItem('wifi-sharing-prefs', JSON.stringify(window.prefs))
+	},
+	
+	loadPrefs: function() {
+		return window.prefs = JSON.parse(localStorage.getItem('wifi-sharing-prefs'));
+	},
+	
+	resetPrefs: function() {
+		return localStorage.removeItem('wifi-sharing-prefs');
 	},
 	
 	//About
@@ -263,7 +314,11 @@ enyo.kind({
 			{kind: "onyx.GroupboxHeader", content: "Misc"},
 			{content: "About", style:"padding:8px"}
 		]},
-	]
+	],
+	
+	setupControls: function() {
+		enyo.log("Setting up controls...");
+	},
 });
 
 //Preferences Drawer- Public, Internal, Root etc.
@@ -322,12 +377,43 @@ enyo.kind({
 	},
 	components:[
 		{name: "Title", style: "float:left; padding:4px;"},
-		{kind: "onyx.Checkbox", style: "float:right"}
+		{kind: "onyx.Checkbox", style: "float:right", onchange: "checkboxChanged"}
 	],
 	
 	create: function() {
 		this.inherited(arguments);
 		this.$.Title.setContent(this.title);
+	},
+	
+	checkboxChanged: function(inSender) {
+		this.share;
+		this.prop;
+		//Hacky as hell I know, but it works
+		switch(this.parent.parent.parent.parent.title) {
+			case "Public":
+				this.share = "publicShare";
+				break;
+			case "Internal":
+				this.share = "internalShare";
+				break;
+			case "Root":
+				this.share = "rootShare";
+				break;
+		}
+		
+		switch(this.$.Title.getContent()) {
+			case "Available":
+				this.prop = "available";
+				break;
+			case "Writeable":
+				this.prop = "writeable";
+				break;
+			case "Browseable":
+				this.prop = "browseable";
+				break;
+		}
+		
+		window.prefs[this.share][this.prop] = inSender.getValue();
 	},
 });
 
