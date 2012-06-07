@@ -3,3 +3,5 @@
 /deploy
 .DS_Store
 lib/.DS_Store
+
+source/.DS_Store
