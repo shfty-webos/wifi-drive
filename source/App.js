@@ -10,11 +10,6 @@ enyo.kind({
 	name: "App",
 	fit: true,
 	classes: "onyx",
-	handlers:{
-		onopenabout: "showAbout",
-		onprefchanged: "handlePrefChanged",
-		onAnimateFinish: "savePrefs"
-	},
 	components:[
 		//System
 		{kind: "enyo.Signals",
@@ -68,9 +63,6 @@ enyo.kind({
 		value: 100,
 		overMoving: false,
 		style: "position:absolute; top:0; left:0; width:100%; height:100%; background:#EAEAEA;",
-		handlers:{
-			onAnimateFinish: "handleAnimateFinish"
-		},
 		components:[
 			{kind: "onyx.Toolbar",
 			style: "position:absolute; top:0; height:32px; width:100%;",
@@ -88,13 +80,7 @@ enyo.kind({
 				style: "position:absolute;",
 				ontap: "closePrefSlideable"}
 			]},
-		],
-		handleAnimateFinish: function(inSender, inEvent) {
-			if(this.value != this.max) {
-				return true;
-			}
-		}
-		},
+		]},
 	
 		{name: "mapSlideable",
 		kind: "enyo.Slideable",
@@ -183,6 +169,7 @@ enyo.kind({
 		
 		//Setup Preferences
 		if(!this.loadPrefs()) {
+			enyo.log("No Preferences Found. Initialising...");
 			window.prefs = {
 				name: this.deviceInfo.modelNameAscii,
 				description: this.deviceInfo.modelNameAscii + " Network Share",
@@ -199,9 +186,11 @@ enyo.kind({
 			this.savePrefs();
 		}
 		else {
+			enyo.log("Preferences Found. Loading...");
 			//Setup UI Elements
-			this.setupUI();
 		}
+		
+		enyo.log(window.prefs);
 	},
 	
 	handleUnload: function() {
@@ -215,13 +204,16 @@ enyo.kind({
 			hideAbout();
 			hideFirstUse();
 			closePrefSlideable();
+			
+			inEvent.stopPropagation();
+			inEvent.preventDefault();
 			return true;
 		}
 	},
 	
 	//Preferences
 	savePrefs: function() {
-		localStorage.setItem('wifi-sharing-prefs', JSON.stringify(window.prefs));
+		return localStorage.setItem('wifi-sharing-prefs', JSON.stringify(window.prefs))
 	},
 	
 	loadPrefs: function() {
@@ -229,15 +221,7 @@ enyo.kind({
 	},
 	
 	resetPrefs: function() {
-		localStorage.removeItem('wifi-sharing-prefs');
-	},
-	
-	setupUI: function() {
-		this.$.prefsContent.setupUI();
-	},
-	
-	handleAnimateFinish: function(inSender, inEvent) {
-		enyo.log("Animation Finished");
+		return localStorage.removeItem('wifi-sharing-prefs');
 	},
 	
 	//About
@@ -277,7 +261,7 @@ enyo.kind({
 	//Animator
 	stepAnimation: function(inSender) {
 		var rotation;
-		if(inSender.animStyle == enyo.vendor + "transform") {
+		if(inSender.animStyle == "-webkit-transform") {
 			rotation = "rotate(" + inSender.value + "deg)";
 			inSender.target.applyStyle(inSender.animStyle, rotation);
 		}
@@ -288,7 +272,7 @@ enyo.kind({
 	
 	endAnimation: function(inSender) {
 		var rotation;
-		if(inSender.animStyle == enyo.vendor + "transform") {
+		if(inSender.animStyle == "-webkit-transform") {
 			rotation = "rotate(" + inSender.endValue + "deg)";
 			inSender.target.applyStyle(inSender.animStyle, rotation);
 		}
@@ -322,45 +306,37 @@ enyo.kind({
 		]},
 		{kind: "onyx.Groupbox", classes: "box-list", components:[
 		{kind: "onyx.GroupboxHeader", content: "Sharing"},
-			{name: "publicDrawer", kind: "PrefsDrawer", title: "Public"},
-			{name: "internalDrawer", kind: "PrefsDrawer", title: "Internal"},
-			{name: "rootDrawer", kind: "PrefsDrawer", title: "Root"},
+			{kind: "PrefsDrawer", title: "Public"},
+			{kind: "PrefsDrawer", title: "Internal"},
+			{kind: "PrefsDrawer", title: "Root"},
 		]},
 		{kind: "onyx.Groupbox", style: "padding:8px;", components:[
 			{kind: "onyx.GroupboxHeader", content: "Misc"},
-			{ontap: "aboutTapped", content: "About", style:"padding:8px"}
+			{content: "About", style:"padding:8px"}
 		]},
 	],
 	
-	setupUI: function() {
-		this.$.publicDrawer.setupUI();
-		this.$.internalDrawer.setupUI();
-		this.$.rootDrawer.setupUI();
-	},
-	
-	aboutTapped: function(inSender, inEvent) {
-		this.bubble("onopenabout", inEvent);
+	setupControls: function() {
+		enyo.log("Setting up controls...");
 	},
 });
 
 //Preferences Drawer- Public, Internal, Root etc.
 enyo.kind({
 	name: "PrefsDrawer",
-	style: "padding:4px;",
+	kind: "Control",
 	published:{
 		title: "Drawer"
 	},
-	handlers:{
-		onprefchanged: "handlePrefChanged"
-	},
+	style: "padding:4px;",
 	components:[
 		{kind: "enyo.Control", name: "Title", style: "float:left; padding:4px;", ontap: "toggleOpen"},
 		{kind: "onyx.IconButton", name: "Button", src: "assets/drawerButton.png", style: "float:right;", ontap: "toggleOpen"},
 		{kind: "onyx.Drawer", open:false, style: "width:100%;", components:[
 			{kind: "onyx.Groupbox", style: "padding-left:2px; padding-right:2px; padding-bottom:2px; padding-top:4px;", components:[
-				{name: "availableBox", kind: "propBox", title: "Available"},
-				{name: "writeableBox", kind: "propBox", title: "Writeable"},
-				{name: "browseableBox", kind: "propBox", title: "Browseable"},
+				{kind: "propBox", title: "Available"},
+				{kind: "propBox", title: "Writeable"},
+				{kind: "propBox", title: "Browseable"},
 			]},
 		]},
 	],
@@ -384,28 +360,16 @@ enyo.kind({
 		}
 		
 		window.animEngine.target = inSender.parent.$.Button;
-		window.animEngine.animStyle = enyo.vendor + "transform";
+		window.animEngine.animStyle = "-webkit-transform";
 		window.animEngine.easingFunction = enyo.easing.expoOut;
 		window.animEngine.duration = 300;
 		
 		window.animEngine.play();
 	},
-	
-	setupUI: function() {
-		var share = this.title.toLowerCase() + "Share";
-		this.$.availableBox.setupUI(share);
-		this.$.writeableBox.setupUI(share);
-		this.$.browseableBox.setupUI(share);
-	},
-	
-	handlePrefChanged: function(inSender, inEvent) {
-		var share = this.title.toLowerCase() + "Share";
-		window.prefs[share][inEvent.prop] = inEvent.value;
-		return true;
-	}
 });
 
 enyo.kind({
+	kind: "enyo.Control",
 	name: "propBox",
 	style: "height:32px; padding:6px;",
 	published:{
@@ -421,14 +385,35 @@ enyo.kind({
 		this.$.Title.setContent(this.title);
 	},
 	
-	setupUI: function(share) {
-		var prop = this.title.toLowerCase();
-		this.$.checkbox.setValue(window.prefs[share][prop]);
-	},
-	
 	checkboxChanged: function(inSender) {
-		var property = this.title.toLowerCase();
-		this.bubble("onprefchanged", {prop: property, value: inSender.getValue()});
+		this.share;
+		this.prop;
+		//Hacky as hell I know, but it works
+		switch(this.parent.parent.parent.parent.title) {
+			case "Public":
+				this.share = "publicShare";
+				break;
+			case "Internal":
+				this.share = "internalShare";
+				break;
+			case "Root":
+				this.share = "rootShare";
+				break;
+		}
+		
+		switch(this.$.Title.getContent()) {
+			case "Available":
+				this.prop = "available";
+				break;
+			case "Writeable":
+				this.prop = "writeable";
+				break;
+			case "Browseable":
+				this.prop = "browseable";
+				break;
+		}
+		
+		window.prefs[this.share][this.prop] = inSender.getValue();
 	},
 });
 

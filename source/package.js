@@ -7,6 +7,5 @@ enyo.depends(
 	"$lib/onyx/source/Drawer.js",
 	"$lib/layout/",
 	"$lib/webos-ext/",
-	"$lib/storage/",
-	"$lib/vendor-prefix/"
+	"$lib/storage/"
 );
