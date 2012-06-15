@@ -1,6 +1,11 @@
-bootplate
+Wi-Fi Drive
 =========
 
-Application template for packaged Enyo
+WiFi File Sharing, rewritten with Enyo2
 
-Refer to the [Wiki](http://github.com/enyojs/bootplate/wiki) for how to get started.
+To-Do
+=========
+* Rejig Preferences to be event-based instead of using window.prefs
+* Proper basis for Drive Mapping w/list
+* Add Service Hooks to Easy Samba
+* Rewrite Service, document, include w/Easy Samba instead of Wi-Fi Drive
