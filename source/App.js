@@ -377,43 +377,46 @@ enyo.kind({
 	},
 	components:[
 		{name: "Title", style: "float:left; padding:4px;"},
-		{kind: "onyx.Checkbox", style: "float:right", onchange: "checkboxChanged"}
+		{kind: "enyo.Checkbox", style: "float:right",
+			checkedChanged: function() {
+				var share;
+				var prop;
+				//Hacky as hell I know, but it works
+				switch(this.parent.parent.parent.parent.parent.title) {
+					case "Public":
+						share = "publicShare";
+						break;
+					case "Internal":
+						share = "internalShare";
+						break;
+					case "Root":
+						share = "rootShare";
+						break;
+				}
+				
+				switch(this.parent.$.Title.getContent()) {
+					case "Available":
+						prop = "available";
+						break;
+					case "Writeable":
+						prop = "writeable";
+						break;
+					case "Browseable":
+						prop = "browseable";
+						break;
+				}
+				
+				if(window.prefs) {
+					window.prefs[share][prop] = this.checked;
+					enyo.log(window.prefs[share][prop]);
+				}
+			}
+		}
 	],
 	
 	create: function() {
 		this.inherited(arguments);
 		this.$.Title.setContent(this.title);
-	},
-	
-	checkboxChanged: function(inSender) {
-		this.share;
-		this.prop;
-		//Hacky as hell I know, but it works
-		switch(this.parent.parent.parent.parent.title) {
-			case "Public":
-				this.share = "publicShare";
-				break;
-			case "Internal":
-				this.share = "internalShare";
-				break;
-			case "Root":
-				this.share = "rootShare";
-				break;
-		}
-		
-		switch(this.$.Title.getContent()) {
-			case "Available":
-				this.prop = "available";
-				break;
-			case "Writeable":
-				this.prop = "writeable";
-				break;
-			case "Browseable":
-				this.prop = "browseable";
-				break;
-		}
-		
-		window.prefs[this.share][this.prop] = inSender.getValue();
 	},
 });
 
